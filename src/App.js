@@ -20,6 +20,7 @@ const layer_metadata = {
 	WaterValley: { center: [51.53558, -114.6893865], file: "WaterValley.tif" },
 	WeedLake: { center: [51.0116526, -113.6743955], file: "WeedLake.tif" },
 };
+
 const MapboxExample = () => {
 	const mapContainerRef = useRef(null);
 	const mapRef = useRef(null);
@@ -33,7 +34,7 @@ const MapboxExample = () => {
 	const [showDatasetModal, setShowDatasetModal] = useState(false);
 	const [mapLoaded, setMapLoaded] = useState(false);
 
-	// Get URL parameters for lat, lng, and zoom
+	// Get URL parameters for lat, lng, zoom, and dataset
 	const getURLParams = () => {
 		const params = new URLSearchParams(window.location.search);
 		return {
@@ -54,7 +55,7 @@ const MapboxExample = () => {
 		const initialLat = latParam || layer_metadata[initialDataset].center[0];
 		const initialZoom = zoomParam || zoom;
 
-		setSelectedDataset(initialDataset); // Update selectedDataset if URL param is present
+		setSelectedDataset(initialDataset);
 		setLng(initialLng);
 		setLat(initialLat);
 		setZoom(initialZoom);
@@ -84,7 +85,7 @@ const MapboxExample = () => {
 
 	// Update tile layer when selectedDataset changes and map is loaded
 	useEffect(() => {
-		if (!mapRef.current || !mapLoaded) return; // Map is not initialized or not loaded yet
+		if (!mapRef.current || !mapLoaded) return;
 
 		// Remove existing tile layer and source if they exist
 		if (mapRef.current.getLayer("customTilesLayer")) {
@@ -94,8 +95,8 @@ const MapboxExample = () => {
 			mapRef.current.removeSource("customTiles");
 		}
 
-		// Add raster tile layer for the selected dataset
-		const tilesUrl = `/tiles/${selectedDataset}/{z}/{x}/{y}.png`;
+		// Use direct URL to Albedo's server for loading tiles
+		const tilesUrl = `http://albedo-sim-data.s3-website-us-west-2.amazonaws.com/tiles/vis/{z}/{x}/{y}.png`;
 
 		mapRef.current.addSource("customTiles", {
 			type: "raster",
@@ -141,11 +142,10 @@ const MapboxExample = () => {
 	// Download dataset based on selected dataset
 	const downloadDataset = () => {
 		const datasetFile = layer_metadata[selectedDataset].file;
-		const downloadUrl = `http://albedo-sim-data.s3-website-us-west-2.amazonaws.com/${datasetFile}`;
+		const downloadUrl = `http://albedo-sim-data.s3-website-us-west-2.amazonaws.com/${selectedDataset}/${datasetFile}`;
 		window.location.assign(downloadUrl);
 	};
 
-	// Zoom to the selected dataset's center
 	const zoomToDataset = (dataset) => {
 		setSelectedDataset(dataset);
 		const [lat, lng] = layer_metadata[dataset].center;
